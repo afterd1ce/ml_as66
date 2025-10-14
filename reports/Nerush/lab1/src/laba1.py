@@ -3,66 +3,37 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 
-# 1. Загрузка данных
+# 1. Загрузка данных и вывод информации
 df = pd.read_csv("E:/Projects/ml_as66/reports/Nerush/lab1/src/german_credit.csv")
 print("🔹 Информация о данных:")
 print(df.info())
 
-# 2. Исследовательский анализ
-print("\n🔹 Количество пропущенных значений:")
-print(df.isnull().sum())
-
-print("\n🔹 Статистика:")
-print(df.describe())
-
-print("\n🔹 Медианы:")
-print(df.median(numeric_only=True))
-
-print("\n🔹 Стандартные отклонения:")
-print(df.std(numeric_only=True))
-
-# 3. Обработка пропущенных значений
-df.fillna(df.mean(numeric_only=True), inplace=True)
-for col in df.select_dtypes(include='object').columns:
-    df[col] = df[col].fillna(df[col].mode()[0])
-
-# 4. One-Hot Encoding для категориальных признаков
-df_encoded = pd.get_dummies(df, columns=['personal_status_sex', 'housing'], drop_first=True)
-
-# 5. Нормализация числовых признаков
-scaler = MinMaxScaler()
-num_cols = ['age', 'credit_amount', 'duration_in_month']
-df_encoded[num_cols] = scaler.fit_transform(df_encoded[num_cols])
-
-# 6. Визуализация
-
-# 6.1 Гистограмма целей кредита
-plt.figure(figsize=(8, 5))
+# 2. Анализ и визуализация целей кредита
 purpose_counts = df['purpose'].value_counts().head(5)
-sns.barplot(x=purpose_counts.index, y=purpose_counts.values, palette="Blues")
+plt.figure(figsize=(8, 5))
+purpose_df = purpose_counts.reset_index()
+purpose_df.columns = ['purpose', 'count']
+sns.barplot(data=purpose_df, x='purpose', y='count', hue='purpose', palette="Blues", legend=False)
 plt.title("Топ-5 целей кредита")
 plt.ylabel("Количество")
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
 
-# 6.2 Ящик с усами по credit_amount
+# 3. Преобразование категориальных признаков Sex и Housing
+df_encoded = pd.get_dummies(df, columns=['personal_status_sex', 'housing'], drop_first=True)
+print(df_encoded.head())
+
+# 4. Ящик с усами для Credit amount по default
 plt.figure(figsize=(8, 5))
-sns.boxplot(x='default', y='credit_amount', data=df, palette="Set2")
+sns.boxplot(x='default', y='credit_amount', hue='default', data=df, palette="Set2", legend=False)
 plt.title("Сравнение суммы кредита по кредитоспособности")
 plt.xlabel("Кредитоспособность (0 = плохой, 1 = хороший)")
 plt.ylabel("Сумма кредита")
 plt.tight_layout()
 plt.show()
 
-# 6.3 Диаграмма рассеяния age vs duration_in_month
-plt.figure(figsize=(8, 5))
-sns.scatterplot(x='age', y='duration_in_month', hue='default', data=df, palette="coolwarm")
-plt.title("Возраст vs Длительность кредита")
-plt.tight_layout()
-plt.show()
-
-# 7. Сводная таблица по credit_history
+# 5. Сводная таблица по Credit history
 pivot_table = df.pivot_table(
     values=['age', 'duration_in_month'],
     index='credit_history',
@@ -70,3 +41,8 @@ pivot_table = df.pivot_table(
 )
 print("\n🔹 Средний возраст и длительность кредита по кредитной истории:")
 print(pivot_table)
+
+# 6. Нормализация числовых признаков
+scaler = MinMaxScaler()
+num_cols = ['age', 'credit_amount', 'duration_in_month']
+df_encoded[num_cols] = scaler.fit_transform(df_encoded[num_cols])
