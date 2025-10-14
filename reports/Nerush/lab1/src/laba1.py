@@ -46,3 +46,4 @@ print(pivot_table)
 scaler = MinMaxScaler()
 num_cols = ['age', 'credit_amount', 'duration_in_month']
 df_encoded[num_cols] = scaler.fit_transform(df_encoded[num_cols])
+print(df_encoded[num_cols].head())
